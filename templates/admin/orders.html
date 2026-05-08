@@ -1,0 +1,84 @@
+{% extends "admin/layout.html" %}
+{% block title %}Orders - LuxeCart Admin{% endblock %}
+{% block page_title %}Orders{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <p class="text-muted text-sm">{{ orders|length }} order{{ 's' if orders|length != 1 else '' }}</p>
+    <!-- Status Filter -->
+    <div class="flex gap-2 flex-wrap">
+        <a href="/admin/orders" class="px-4 py-2 rounded-lg text-xs font-bold transition-all {{ 'bg-primary text-white shadow-lg shadow-primary/20' if not status_filter else 'bg-white border border-gray-200 text-muted hover:border-primary hover:text-primary' }}">All</a>
+        {% for status in ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'] %}
+        <a href="/admin/orders?status={{ status }}" class="px-4 py-2 rounded-lg text-xs font-bold transition-all {{ 'bg-primary text-white shadow-lg shadow-primary/20' if status_filter == status else 'bg-white border border-gray-200 text-muted hover:border-primary hover:text-primary' }}">{{ status }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="data-table w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-100 bg-gray-50/50">
+                    <th class="text-left px-6 py-4">Order ID</th>
+                    <th class="text-left px-6 py-4">Customer</th>
+                    <th class="text-left px-6 py-4">Items</th>
+                    <th class="text-left px-6 py-4">Total</th>
+                    <th class="text-left px-6 py-4">Payment</th>
+                    <th class="text-left px-6 py-4">Status</th>
+                    <th class="text-left px-6 py-4">Date</th>
+                    <th class="text-right px-6 py-4">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr class="border-b border-gray-50">
+                    <td class="px-6 py-4">
+                        <a href="/admin/orders/{{ order.id }}" class="font-mono text-xs font-bold hover:text-primary transition-colors">{{ order.order_uid[:12] }}...</a>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if order.user_id %}
+                        <span class="text-sm font-medium">User #{{ order.user_id }}</span>
+                        {% else %}
+                        <span class="text-xs text-muted">Guest</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm font-medium">{{ order.items|length }} item{{ 's' if order.items|length != 1 else '' }}</span>
+                    </td>
+                    <td class="px-6 py-4 font-bold text-dark">₹{{ "{:,.2f}".format(order.total) }}</td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-medium bg-gray-50 px-2.5 py-1 rounded-lg">{{ order.payment_method }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% set status_colors = {'Pending': 'bg-yellow-50 text-yellow-700', 'Processing': 'bg-blue-50 text-blue-700', 'Shipped': 'bg-purple-50 text-purple-700', 'Delivered': 'bg-green-50 text-green-700', 'Cancelled': 'bg-red-50 text-red-700'} %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold {{ status_colors.get(order.status, 'bg-gray-50 text-gray-700') }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ 'bg-yellow-500' if order.status == 'Pending' else 'bg-blue-500' if order.status == 'Processing' else 'bg-purple-500' if order.status == 'Shipped' else 'bg-green-500' if order.status == 'Delivered' else 'bg-red-500' }}"></span>
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-muted text-xs">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}</td>
+                    <td class="px-6 py-4 text-right">
+                        <a href="/admin/orders/{{ order.id }}" class="text-xs font-bold text-primary hover:underline">View →</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not orders %}
+                <tr>
+                    <td colspan="8" class="px-6 py-16 text-center">
+                        <div class="flex flex-col items-center">
+                            <div class="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                                <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                            </div>
+                            <p class="font-bold text-gray-400 mb-1">No orders found</p>
+                            <p class="text-xs text-muted">Orders will appear here once customers start purchasing.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+LuxeCart Product Catalog — Complete Reference Guide
+=====================================================
+
+1. Nova Headphones — ₹199.99
+   Category: Electronics
+   Description: Premium wireless noise-cancelling headphones with 40-hour battery life
+   and studio-quality sound. Features adaptive ANC, Bluetooth 5.3 with multipoint
+   connectivity, and memory-foam cushions for all-day comfort. Includes a carrying case,
+   3.5mm cable, and USB-C fast-charge cable (15 min = 4 hrs playback).
+   Warranty: 2-year limited warranty covering manufacturing defects.
+   Ideal for: Music enthusiasts, remote workers, frequent travelers.
+
+2. Smart Watch Pro — ₹249.50
+   Category: Wearables
+   Description: Tracks your health and fitness goals with a vivid AMOLED display (1.8",
+   450 nits peak) and 7-day battery life. Built-in GPS, heart rate, SpO2, sleep, stress
+   monitoring, and women's health tracking. Water-resistant to 50 meters (5 ATM). Over
+   100 workout modes including swimming, HIIT, and yoga.
+   Compatibility: Works with iOS 14+ and Android 10+.
+   Warranty: 1-year limited warranty.
+   Ideal for: Fitness enthusiasts, health-conscious users, outdoor adventurers.
+
+3. Minimalist Lamp — ₹45.00
+   Category: Home Decor
+   Description: Sleek wooden base lamp for a modern workspace with adjustable warmth
+   (3000K–5500K color temperature). Touch-sensitive brightness control with 5 levels.
+   Built-in USB-A charging port. Handcrafted from sustainable bamboo and recycled
+   aluminum shade. Height: 18 inches.
+   Bulb type: Integrated LED (non-replaceable), rated for 50,000 hours.
+   Warranty: 1-year limited warranty.
+   Ideal for: Home office setups, minimalist decor lovers, students.
+
+4. Leather Crossbody Bag — ₹129.00
+   Category: Fashion
+   Description: Handcrafted Italian leather crossbody bag with solid brass hardware.
+   Features an adjustable strap (drop: 20–25 inches), one main compartment, two interior
+   slip pockets, one exterior zip pocket, and a hidden magnetic closure. Dimensions:
+   9.5" W × 7" H × 3" D. Available in Cognac, Black, and Olive.
+   Care: Condition with leather balm every 3–6 months; avoid prolonged sun exposure.
+   Warranty: 1-year craftsmanship warranty.
+   Ideal for: Fashion-forward professionals, everyday carry, travel.
+
+5. Ceramic Vase Set — ₹68.00
+   Category: Home Decor
+   Description: Set of 3 minimalist ceramic vases in matte earth tones (Sand, Terracotta,
+   Charcoal). Hand-thrown and kiln-fired at 1200°C for durability. Watertight glazed
+   interior allows fresh flower arrangements. Sizes: Small (5"), Medium (7"), Large (10").
+   Care: Hand-wash only. Not dishwasher or microwave safe.
+   Warranty: Breakage guarantee for 30 days from delivery.
+   Ideal for: Interior designers, gift buyers, minimalist home enthusiasts.
+
+6. Wireless Earbuds — ₹159.99
+   Category: Electronics
+   Description: True wireless earbuds with hybrid active noise cancellation and
+   transparency mode. IPX5 sweat-resistant with 8 hours playtime (32 hours total with
+   case). 10mm custom drivers, AAC/SBC codecs, touch controls, and seamless device
+   switching. Wireless Qi-compatible charging case included.
+   Fit: Comes with 4 sizes of silicone ear tips (XS/S/M/L).
+   Warranty: 1-year limited warranty.
+   Ideal for: Commuters, gym-goers, podcast listeners.

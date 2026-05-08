@@ -1,0 +1,637 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     LuxeCart RAG QA Chatbot — Floating Widget
+     Include this partial at the bottom of any layout template.
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<style>
+/* ── Chat Floating Button ─────────────────────────────────────────────────── */
+#lc-chat-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 10000;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.4), 0 0 0 0 rgba(124, 58, 237, 0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: lc-fab-pulse 2.5s infinite;
+}
+#lc-chat-fab:hover {
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 12px 40px rgba(124, 58, 237, 0.5);
+}
+#lc-chat-fab svg { width: 28px; height: 28px; color: white; transition: transform 0.3s; }
+#lc-chat-fab.open svg { transform: rotate(90deg); }
+@keyframes lc-fab-pulse {
+    0%, 100% { box-shadow: 0 8px 32px rgba(124, 58, 237, 0.4), 0 0 0 0 rgba(124, 58, 237, 0.3); }
+    50% { box-shadow: 0 8px 32px rgba(124, 58, 237, 0.4), 0 0 0 12px rgba(124, 58, 237, 0); }
+}
+
+/* ── Notification dot ──────────────────────────────────────────────────────── */
+#lc-chat-fab .lc-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background: #10B981;
+    border: 2.5px solid white;
+    border-radius: 50%;
+    animation: lc-dot-pulse 2s infinite;
+}
+@keyframes lc-dot-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ── Chat Window ───────────────────────────────────────────────────────────── */
+#lc-chat-window {
+    position: fixed;
+    bottom: 100px;
+    right: 28px;
+    z-index: 10001;
+    width: 420px;
+    max-width: calc(100vw - 40px);
+    height: 580px;
+    max-height: calc(100vh - 140px);
+    border-radius: 24px;
+    background: #ffffff;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0,0,0,0.04);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    animation: lc-chat-slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: bottom right;
+}
+#lc-chat-window.visible { display: flex; }
+@keyframes lc-chat-slide-up {
+    from { opacity: 0; transform: scale(0.85) translateY(30px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Chat Header ───────────────────────────────────────────────────────────── */
+.lc-chat-header {
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+.lc-chat-header .lc-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.lc-chat-header .lc-avatar svg { width: 24px; height: 24px; color: white; }
+.lc-chat-header .lc-info { flex: 1; }
+.lc-chat-header .lc-info h3 {
+    color: white;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+.lc-chat-header .lc-info p {
+    color: rgba(255,255,255,0.7);
+    font-size: 12px;
+    margin: 2px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.lc-chat-header .lc-info p .lc-online-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #34D399; display: inline-block;
+}
+.lc-chat-header .lc-close {
+    width: 32px; height: 32px; border-radius: 10px; border: none; cursor: pointer;
+    background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+}
+.lc-chat-header .lc-close:hover { background: rgba(255,255,255,0.25); }
+.lc-chat-header .lc-close svg { width: 16px; height: 16px; color: white; }
+
+/* ── Chat Body ─────────────────────────────────────────────────────────────── */
+.lc-chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: #f9fafb;
+}
+.lc-chat-body::-webkit-scrollbar { width: 4px; }
+.lc-chat-body::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+/* ── Messages ──────────────────────────────────────────────────────────────── */
+.lc-msg {
+    max-width: 85%;
+    display: flex;
+    flex-direction: column;
+    animation: lc-msg-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes lc-msg-pop {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.lc-msg.bot { align-self: flex-start; }
+.lc-msg.user { align-self: flex-end; }
+
+.lc-msg .lc-bubble {
+    padding: 14px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    line-height: 1.55;
+    font-family: 'Outfit', sans-serif;
+    word-wrap: break-word;
+}
+.lc-msg.bot .lc-bubble {
+    background: white;
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.lc-msg.user .lc-bubble {
+    background: linear-gradient(135deg, #7C3AED, #5B21B6);
+    color: white;
+    border-bottom-right-radius: 6px;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+}
+.lc-msg .lc-time {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 4px;
+    padding: 0 4px;
+}
+.lc-msg.user .lc-time { text-align: right; }
+
+/* Bot message markdown */
+.lc-msg.bot .lc-bubble strong { font-weight: 700; color: #7C3AED; }
+.lc-msg.bot .lc-bubble ul, .lc-msg.bot .lc-bubble ol { margin: 6px 0; padding-left: 18px; }
+.lc-msg.bot .lc-bubble li { margin: 3px 0; }
+.lc-msg.bot .lc-bubble code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+.lc-msg.bot .lc-bubble p { margin: 0 0 6px; }
+.lc-msg.bot .lc-bubble p:last-child { margin-bottom: 0; }
+
+/* ── Typing Indicator ──────────────────────────────────────────────────────── */
+.lc-typing {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 14px 20px;
+    background: white;
+    border-radius: 20px;
+    border-bottom-left-radius: 6px;
+    width: fit-content;
+    border: 1px solid #e5e7eb;
+    animation: lc-msg-pop 0.3s ease-out;
+}
+.lc-typing span {
+    width: 8px; height: 8px; border-radius: 50%; background: #a78bfa;
+    animation: lc-typing-bounce 1.4s infinite both;
+}
+.lc-typing span:nth-child(2) { animation-delay: 0.16s; }
+.lc-typing span:nth-child(3) { animation-delay: 0.32s; }
+@keyframes lc-typing-bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Suggested Chips ───────────────────────────────────────────────────────── */
+.lc-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 4px;
+    animation: lc-msg-pop 0.4s ease-out 0.2s both;
+}
+.lc-chip {
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: 1.5px solid #e5e7eb;
+    background: white;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.lc-chip:hover {
+    border-color: #7C3AED;
+    color: #7C3AED;
+    background: rgba(124, 58, 237, 0.04);
+    transform: translateY(-1px);
+}
+
+/* ── Chat Input ────────────────────────────────────────────────────────────── */
+.lc-chat-input {
+    padding: 16px 20px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    flex-shrink: 0;
+}
+.lc-chat-input input {
+    flex: 1;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-family: 'Outfit', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #f9fafb;
+    color: #1f2937;
+}
+.lc-chat-input input:focus {
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.08);
+    background: white;
+}
+.lc-chat-input input::placeholder { color: #9ca3af; }
+.lc-chat-input button {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #7C3AED, #5B21B6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+.lc-chat-input button:hover {
+    transform: scale(1.06);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+}
+.lc-chat-input button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+.lc-chat-input button svg { width: 20px; height: 20px; color: white; }
+
+/* ── Agent badge ───────────────────────────────────────────────────────────── */
+.lc-agent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(124,58,237,0.04));
+    border: 1px solid rgba(124, 58, 237, 0.18);
+    color: #7C3AED;
+    font-size: 10px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.02em;
+}
+
+/* ── Sources pill ──────────────────────────────────────────────────────────── */
+.lc-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+}
+.lc-source-pill {
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: rgba(124, 58, 237, 0.06);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    color: #7C3AED;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* ── Power badge ───────────────────────────────────────────────────────────── */
+.lc-powered {
+    text-align: center;
+    padding: 8px;
+    font-size: 10px;
+    color: #9ca3af;
+    background: white;
+    border-top: 1px solid #f5f5f5;
+    flex-shrink: 0;
+}
+.lc-powered span { color: #7C3AED; font-weight: 700; }
+
+/* ── Ingest button ─────────────────────────────────────────────────────────── */
+.lc-ingest-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    border-top: 1px solid #e5e7eb;
+    flex-shrink: 0;
+}
+.lc-ingest-btn {
+    padding: 5px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #7C3AED;
+    background: white;
+    color: #7C3AED;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.lc-ingest-btn:hover {
+    background: #7C3AED;
+    color: white;
+}
+
+/* ── Mobile responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    #lc-chat-window {
+        width: calc(100vw - 16px);
+        height: calc(100vh - 100px);
+        bottom: 80px;
+        right: 8px;
+        border-radius: 20px;
+    }
+    #lc-chat-fab { bottom: 16px; right: 16px; width: 56px; height: 56px; }
+}
+</style>
+
+<!-- Floating Action Button -->
+<button id="lc-chat-fab" onclick="lcToggleChat()" aria-label="Open AI Chat Assistant">
+    <span class="lc-dot"></span>
+    <svg id="lc-fab-icon-chat" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+    </svg>
+    <svg id="lc-fab-icon-close" style="display:none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+</button>
+
+<!-- Chat Window -->
+<div id="lc-chat-window">
+    <!-- Header -->
+    <div class="lc-chat-header">
+        <div class="lc-avatar">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
+        </div>
+        <div class="lc-info">
+            <h3>LuxeCart AI Assistant</h3>
+            <p><span class="lc-online-dot"></span> LangGraph Multi-Agent · 3 Specialists</p>
+        </div>
+        <button class="lc-close" onclick="lcToggleChat()" aria-label="Close chat">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+
+    <!-- Messages Area -->
+    <div class="lc-chat-body" id="lc-chat-body">
+        <!-- Welcome message -->
+        <div class="lc-msg bot">
+            <div class="lc-bubble">
+                👋 <strong>Hello!</strong> I'm LuxeCart's AI Assistant — a multi-agent system powered by <strong>LangGraph</strong>.<br><br>
+                I route your questions to the right specialist:
+                <ul>
+                    <li>🛍️ <strong>Product Specialist</strong> — features, pricing, recommendations</li>
+                    <li>🎧 <strong>Customer Support</strong> — shipping, returns, FAQs</li>
+                    <li>📊 <strong>Business Intelligence</strong> — analytics, forecasts, insights</li>
+                </ul>
+            </div>
+            <div class="lc-time">Just now</div>
+        </div>
+        <!-- Suggested questions -->
+        <div class="lc-chips" id="lc-chips">
+            <button class="lc-chip" onclick="lcSendChip(this)">🛍️ What products do you sell?</button>
+            <button class="lc-chip" onclick="lcSendChip(this)">🎧 How do returns work?</button>
+            <button class="lc-chip" onclick="lcSendChip(this)">🚚 Shipping options</button>
+            <button class="lc-chip" onclick="lcSendChip(this)">📊 Sales analytics</button>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="lc-chat-input">
+        <input type="text" id="lc-input" placeholder="Ask me anything about LuxeCart…" autocomplete="off"
+               onkeydown="if(event.key==='Enter')lcSend()">
+        <button onclick="lcSend()" id="lc-send-btn" aria-label="Send message">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+        </button>
+    </div>
+
+    <!-- Admin: Ingest Button -->
+    <div class="lc-ingest-bar" id="lc-ingest-bar" style="display:none">
+        <button class="lc-ingest-btn" onclick="lcIngest()" id="lc-ingest-btn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Train / Ingest Documents
+        </button>
+    </div>
+
+    <!-- Powered By -->
+    <div class="lc-powered"><span>LangGraph</span> Multi-Agent · <span>Gemini</span> · <span>Pinecone</span> RAG</div>
+</div>
+
+<script>
+/* ── Chat Widget Logic ─────────────────────────────────────────────────────── */
+(function() {
+    const CHAT_API = "/chat/api/ask";
+
+    // Toggle chat window
+    window.lcToggleChat = function() {
+        const win = document.getElementById("lc-chat-window");
+        const fab = document.getElementById("lc-chat-fab");
+        const iconChat = document.getElementById("lc-fab-icon-chat");
+        const iconClose = document.getElementById("lc-fab-icon-close");
+
+        const isOpen = win.classList.contains("visible");
+        if (isOpen) {
+            win.style.animation = "none";
+            win.style.opacity = "0";
+            win.style.transform = "scale(0.85) translateY(30px)";
+            win.style.transition = "all 0.25s ease-in";
+            setTimeout(() => {
+                win.classList.remove("visible");
+                win.style = "";
+            }, 250);
+            fab.classList.remove("open");
+            iconChat.style.display = "";
+            iconClose.style.display = "none";
+        } else {
+            win.classList.add("visible");
+            fab.classList.add("open");
+            iconChat.style.display = "none";
+            iconClose.style.display = "";
+            document.getElementById("lc-input").focus();
+        }
+    };
+
+    // Send chip suggestion
+    window.lcSendChip = function(el) {
+        document.getElementById("lc-input").value = el.textContent;
+        // Hide chips after first use
+        const chips = document.getElementById("lc-chips");
+        if (chips) chips.style.display = "none";
+        lcSend();
+    };
+
+    // Send message
+    window.lcSend = async function() {
+        const input = document.getElementById("lc-input");
+        const question = input.value.trim();
+        if (!question) return;
+
+        const body = document.getElementById("lc-chat-body");
+        const sendBtn = document.getElementById("lc-send-btn");
+
+        // Hide chips on first send
+        const chips = document.getElementById("lc-chips");
+        if (chips) chips.style.display = "none";
+
+        // Add user message
+        appendMsg("user", question);
+        input.value = "";
+        sendBtn.disabled = true;
+
+        // Show typing
+        const typingEl = showTyping();
+
+        try {
+            const resp = await fetch(CHAT_API, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question }),
+            });
+            const data = await resp.json();
+            typingEl.remove();
+
+            if (data.error && !data.answer) {
+                appendMsg("bot", "⚠️ " + data.error);
+            } else {
+                const answer = data.answer || data.error || "Sorry, I couldn't process that.";
+                const agentLabel = data.agent_label || null;
+                appendMsg("bot", formatMarkdown(answer), data.sources, agentLabel);
+            }
+        } catch (err) {
+            typingEl.remove();
+            appendMsg("bot", "⚠️ Connection error. Please check your network and try again.");
+            console.error("[LuxeChat]", err);
+        }
+
+        sendBtn.disabled = false;
+        input.focus();
+    };
+
+    // Append a message bubble
+    function appendMsg(role, html, sources, agentLabel) {
+        const body = document.getElementById("lc-chat-body");
+        const now = new Date();
+        const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+        let badgeHTML = "";
+        if (role === "bot" && agentLabel) {
+            badgeHTML = `<div class="lc-agent-badge">${agentLabel}</div>`;
+        }
+
+        let srcHTML = "";
+        if (sources && sources.length > 0) {
+            srcHTML = '<div class="lc-sources">' +
+                sources.map(s => `<span class="lc-source-pill">📄 ${s.replace(/\.txt|\.md/g,"")}</span>`).join("") +
+                "</div>";
+        }
+
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `lc-msg ${role}`;
+        msgDiv.innerHTML = `
+            ${badgeHTML}
+            <div class="lc-bubble">${html}</div>
+            ${srcHTML}
+            <div class="lc-time">${time}</div>
+        `;
+        body.appendChild(msgDiv);
+        body.scrollTop = body.scrollHeight;
+    }
+
+    // Show typing indicator
+    function showTyping() {
+        const body = document.getElementById("lc-chat-body");
+        const div = document.createElement("div");
+        div.className = "lc-typing";
+        div.innerHTML = "<span></span><span></span><span></span>";
+        body.appendChild(div);
+        body.scrollTop = body.scrollHeight;
+        return div;
+    }
+
+    // Basic markdown → HTML converter
+    function formatMarkdown(text) {
+        return text
+            // Bold
+            .replace(/\*\*(.+?)\*\*/g, "<strong></strong>")
+            // Italic
+            .replace(/\*(.+?)\*/g, "<em></em>")
+            // Inline code
+            .replace(/`(.+?)`/g, "<code></code>")
+            // Unordered lists
+            .replace(/^[-•]\s+(.+)$/gm, "<li></li>")
+            .replace(/(<li>.*<\/li>\n?)+/gs, (m) => "<ul>" + m + "</ul>")
+            // Ordered lists
+            .replace(/^\d+\.\s+(.+)$/gm, "<li></li>")
+            // Line breaks
+            .replace(/\n{2,}/g, "<br><br>")
+            .replace(/\n/g, "<br>");
+    }
+
+    // Admin: ingest documents into Pinecone
+    window.lcIngest = async function() {
+        const btn = document.getElementById("lc-ingest-btn");
+        btn.disabled = true;
+        btn.textContent = "⏳ Ingesting...";
+        try {
+            const resp = await fetch("/chat/api/ingest", { method: "POST" });
+            const data = await resp.json();
+            if (data.status === "success") {
+                const total = Object.values(data.chunks_by_ns || {}).reduce((a, b) => a + b, 0);
+                appendMsg("bot", `✅ <strong>Training complete!</strong> Ingested <strong>${total}</strong> chunks across ${Object.keys(data.chunks_by_ns || {}).length} namespaces (${data.documents} docs, ${data.products} products).`);
+            } else {
+                appendMsg("bot", "⚠️ " + (data.error || "Ingestion returned no data."));
+            }
+        } catch (err) {
+            appendMsg("bot", "⚠️ Ingestion failed: " + err.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Train / Ingest Documents';
+    };
+
+    // Show admin ingest bar if admin is logged in
+    fetch("/chat/api/status").then(r => r.json()).then(d => {
+        // Check if we're on an admin page
+        if (window.location.pathname.startsWith("/admin") || document.cookie.includes("admin")) {
+            const bar = document.getElementById("lc-ingest-bar");
+            if (bar) bar.style.display = "flex";
+        }
+    }).catch(() => {});
+})();
+</script>

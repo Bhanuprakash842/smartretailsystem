@@ -1,0 +1,41 @@
+About LuxeCart — Premium E-Commerce Platform
+===============================================
+
+Company Overview:
+LuxeCart is a premium e-commerce platform dedicated to curating high-quality products
+across Electronics, Wearables, Fashion, and Home Decor. Our mission is to make luxury
+and quality accessible to everyone through a seamless digital shopping experience.
+
+Founded: 2024
+Headquarters: Hyderabad, India & San Francisco, USA
+Team Size: 50+ passionate professionals
+
+Our Values:
+- Quality First: Every product on LuxeCart is vetted for quality and durability.
+- Customer-Centric: We prioritize your satisfaction with easy returns, fast shipping,
+  and responsive support.
+- Innovation: From AI-powered demand forecasting to RAG-based customer support, we
+  leverage cutting-edge technology to enhance your shopping experience.
+- Sustainability: We use eco-friendly packaging and partner with brands committed to
+  ethical manufacturing.
+
+Technology Stack:
+- Backend: Python Flask with SQLAlchemy ORM
+- Database: Azure SQL (production), SQLite (development)
+- AI/ML: Scikit-learn for demand forecasting, Pinecone for vector search,
+  OpenAI for embeddings and natural language understanding
+- Frontend: HTML5, TailwindCSS, JavaScript
+
+Key Features:
+1. Curated Product Catalog with detailed descriptions and high-quality imagery
+2. Secure Checkout with multiple payment options
+3. Real-time Order Tracking
+4. AI-Powered Demand Forecasting for inventory optimization
+5. RAG-Based QA Assistant for instant customer support
+6. Admin Dashboard with analytics, order management, and product CRUD
+
+Contact:
+- Website: luxecart.com
+- Email: info@luxecart.com
+- Support: support@luxecart.com
+- Phone: +91 1800-LUXE-CART | +1 (800) 589-3227

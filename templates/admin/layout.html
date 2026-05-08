@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel - LuxeCart{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7C3AED',
+                        'primary-light': '#A78BFA',
+                        'primary-dark': '#5B21B6',
+                        secondary: '#E0D7F5',
+                        dark: '#0F0F0F',
+                        surface: '#FAFAFA',
+                        muted: '#6B7280',
+                        'sidebar-dark': '#111111',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background-color: #F5F5F7; color: #0F0F0F; }
+        .gradient-text { background: linear-gradient(135deg, #7C3AED 0%, #A78BFA 50%, #C4B5FD 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+        /* Sidebar */
+        .sidebar-link { transition: all 0.2s; border-radius: 12px; }
+        .sidebar-link:hover { background: rgba(124, 58, 237, 0.08); }
+        .sidebar-link.active { background: rgba(124, 58, 237, 0.1); color: #7C3AED; font-weight: 700; }
+        .sidebar-link.active .link-icon { color: #7C3AED; }
+
+        /* Cards */
+        .stat-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1); }
+
+        /* Table */
+        .data-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #9CA3AF; font-weight: 700; }
+        .data-table td { vertical-align: middle; }
+        .data-table tr { transition: background-color 0.15s; }
+        .data-table tbody tr:hover { background-color: rgba(124, 58, 237, 0.02); }
+
+        /* Buttons */
+        .btn-admin { background: linear-gradient(135deg, #7C3AED, #5B21B6); color: white; transition: all 0.3s; }
+        .btn-admin:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.3); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 100px; }
+
+        /* Toast */
+        .toast { position: fixed; top: 20px; right: 20px; z-index: 9999; animation: slideIn 0.4s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Input focus */
+        input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1); }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-72 bg-white border-r border-gray-100 flex flex-col shrink-0 shadow-sm">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <a href="/admin" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/20">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold gradient-text">LuxeCart</span>
+                    <div class="text-[10px] font-bold text-muted uppercase tracking-widest">Admin Panel</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <div class="text-[10px] font-bold text-muted uppercase tracking-widest px-4 py-2 mt-2">Main</div>
+            <a href="/admin" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 {% if request.path == '/admin' %}active{% endif %}">
+                <svg class="w-5 h-5 link-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                Dashboard
+            </a>
+
+            <div class="text-[10px] font-bold text-muted uppercase tracking-widest px-4 py-2 mt-4">Catalog</div>
+            <a href="/admin/products" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 {% if '/admin/products' in request.path %}active{% endif %}">
+                <svg class="w-5 h-5 link-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                Products
+            </a>
+
+            <div class="text-[10px] font-bold text-muted uppercase tracking-widest px-4 py-2 mt-4">Sales</div>
+            <a href="/admin/orders" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 {% if '/admin/orders' in request.path %}active{% endif %}">
+                <svg class="w-5 h-5 link-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                Orders
+            </a>
+
+            <div class="text-[10px] font-bold text-muted uppercase tracking-widest px-4 py-2 mt-4">AI / Analytics</div>
+            <a href="/forecast/dashboard" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 {% if '/forecast' in request.path %}active{% endif %}">
+                <svg class="w-5 h-5 link-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Demand Forecasting
+            </a>
+            <a href="#" onclick="lcToggleChat(); return false;" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600">
+                <svg class="w-5 h-5 link-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                AI Assistant
+                <span class="ml-auto px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-[10px] font-bold">RAG</span>
+            </a>
+
+            <div class="text-[10px] font-bold text-muted uppercase tracking-widest px-4 py-2 mt-4">People</div>
+            <a href="/admin/users" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 {% if '/admin/users' in request.path %}active{% endif %}">
+                <svg class="w-5 h-5 link-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                Customers
+            </a>
+        </nav>
+
+        <!-- User Card -->
+        <div class="p-4 border-t border-gray-100">
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-sm shadow-md">
+                    {{ username[0]|upper if username else 'A' }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold truncate">{{ username or 'Admin' }}</div>
+                    <div class="text-[11px] text-muted">Administrator</div>
+                </div>
+                <a href="/admin/logout" class="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all" title="Logout">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Top Bar -->
+        <header class="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-8 shrink-0">
+            <div>
+                <h2 class="text-lg font-bold">{% block page_title %}Dashboard{% endblock %}</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/" target="_blank" class="text-sm text-muted hover:text-primary transition-colors flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    View Store
+                </a>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto p-8">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            <div class="toast bg-white border border-green-200 text-green-700 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3" onclick="this.remove()">
+                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <span class="font-medium text-sm">{{ message }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- RAG QA Chatbot Widget -->
+    {% include 'chatbot_widget.html' %}
+
+    <script>
+        // Auto-dismiss toasts
+        document.querySelectorAll('.toast').forEach(toast => {
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100px)'; toast.style.transition = 'all 0.5s'; setTimeout(() => toast.remove(), 500); }, 4000);
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

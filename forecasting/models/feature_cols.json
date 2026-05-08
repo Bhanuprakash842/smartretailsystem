@@ -1,0 +1,1 @@
+["product_id", "price", "day_of_week", "is_weekend", "month", "year", "week_of_year", "day_of_year", "is_promotion", "promo_discount", "lag_1", "lag_7", "lag_14", "lag_30", "roll_7_mean", "roll_7_std", "roll_14_mean", "roll_14_std", "roll_30_mean", "category_enc", "season_enc"]

@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block title %}Order Confirmation - LuxeCart{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-32 text-center">
+    {% if status == 'success' %}
+    <div class="bg-white p-16 rounded-[3rem] shadow-2xl shadow-black/5 border border-gray-100 relative overflow-hidden animate-fade-up">
+        <!-- Success Animation -->
+        <div class="relative w-24 h-24 mx-auto mb-10">
+            <div class="absolute inset-0 bg-green-200 rounded-full animate-ping opacity-30"></div>
+            <div class="relative bg-green-100 w-24 h-24 rounded-full flex items-center justify-center">
+                <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            </div>
+        </div>
+
+        <h1 class="text-4xl font-black mb-4">Payment Successful!</h1>
+        <p class="text-muted text-lg mb-10 max-w-sm mx-auto">Thank you for your purchase. Your order has been placed and is being processed.</p>
+
+        <div class="bg-gray-50 p-6 rounded-2xl mb-10 border border-gray-100">
+            <div class="text-xs text-muted uppercase tracking-widest font-bold mb-2">Order ID</div>
+            <div class="font-mono text-primary font-bold text-lg">{{ order_id }}</div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/" class="btn-primary px-10 py-4 rounded-2xl font-bold inline-block shadow-xl"><span>Continue Shopping</span></a>
+            {% if username %}
+            <a href="/orders" class="px-10 py-4 rounded-2xl font-bold border-2 border-gray-200 text-dark hover:border-primary hover:text-primary transition-all">My Orders</a>
+            {% endif %}
+        </div>
+
+        <!-- Decoration -->
+        <div class="absolute -top-16 -right-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-green-100/50 rounded-full blur-3xl"></div>
+    </div>
+    {% else %}
+    <div class="bg-white p-16 rounded-[3rem] shadow-2xl shadow-black/5 border border-gray-100 animate-fade-up">
+        <div class="bg-red-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-10">
+            <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
+        <h1 class="text-4xl font-black mb-4">Order Failed</h1>
+        <p class="text-muted text-lg mb-10">There was an issue processing your payment. Please try again.</p>
+        <a href="/cart" class="btn-primary px-10 py-4 rounded-2xl font-bold inline-block shadow-xl"><span>Return to Cart</span></a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

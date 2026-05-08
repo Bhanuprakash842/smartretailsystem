@@ -1,0 +1,93 @@
+{
+  "feature_cols": [
+    "product_id",
+    "price",
+    "day_of_week",
+    "is_weekend",
+    "month",
+    "year",
+    "week_of_year",
+    "day_of_year",
+    "is_promotion",
+    "promo_discount",
+    "lag_1",
+    "lag_7",
+    "lag_14",
+    "lag_30",
+    "roll_7_mean",
+    "roll_7_std",
+    "roll_14_mean",
+    "roll_14_std",
+    "roll_30_mean",
+    "category_enc",
+    "season_enc"
+  ],
+  "target_col": "qty_sold",
+  "global_model": {
+    "mae": 2.398,
+    "rmse": 3.131,
+    "r2": 0.708
+  },
+  "per_product_models": {
+    "1": {
+      "product_name": "Nova Headphones",
+      "mae": 1.862,
+      "rmse": 2.165,
+      "r2": 0.028
+    },
+    "2": {
+      "product_name": "Smart Watch Pro",
+      "mae": 2.043,
+      "rmse": 2.603,
+      "r2": 0.067
+    },
+    "3": {
+      "product_name": "Minimalist Lamp",
+      "mae": 3.119,
+      "rmse": 3.799,
+      "r2": 0.283
+    },
+    "4": {
+      "product_name": "Leather Crossbody",
+      "mae": 2.155,
+      "rmse": 2.865,
+      "r2": -0.134
+    },
+    "5": {
+      "product_name": "Ceramic Vase Set",
+      "mae": 2.429,
+      "rmse": 3.096,
+      "r2": 0.26
+    },
+    "6": {
+      "product_name": "Wireless Earbuds",
+      "mae": 2.024,
+      "rmse": 2.565,
+      "r2": 0.159
+    },
+    "7": {
+      "product_name": "Gaming Keyboard",
+      "mae": 2.578,
+      "rmse": 3.08,
+      "r2": 0.384
+    },
+    "8": {
+      "product_name": "Yoga Mat Premium",
+      "mae": 3.853,
+      "rmse": 5.027,
+      "r2": 0.38
+    },
+    "9": {
+      "product_name": "Coffee Maker Deluxe",
+      "mae": 1.535,
+      "rmse": 1.868,
+      "r2": -0.74
+    },
+    "10": {
+      "product_name": "Smart Speaker",
+      "mae": 2.566,
+      "rmse": 3.095,
+      "r2": 0.485
+    }
+  }
+}

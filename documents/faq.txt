@@ -1,0 +1,58 @@
+LuxeCart — Frequently Asked Questions (FAQ)
+=============================================
+
+Q: How do I create an account?
+A: Click "Register" in the top navigation bar. Fill in your username, email, and
+   password. You'll be able to start shopping immediately after registration.
+
+Q: How do I place an order?
+A: Browse our products on the homepage, click "Add to Cart" on any item, then go to
+   your Cart and click "Proceed to Checkout." Enter your shipping address and payment
+   method, then confirm your order.
+
+Q: What payment methods do you accept?
+A: We accept Credit Cards (Visa, Mastercard, Amex), Debit Cards, UPI, Net Banking,
+   Wallets (Paytm, PhonePe), and Cash on Delivery (COD) for orders under ₹200.
+
+Q: Can I cancel my order?
+A: Yes, you can cancel an order within 2 hours of placing it, as long as it hasn't
+   been shipped. Go to "My Orders," find the order, and click "Cancel."
+
+Q: How do I track my order?
+A: After your order ships, you'll receive a tracking number via email. You can also
+   track it from "My Orders" on the website.
+
+Q: Is my payment information secure?
+A: Absolutely. We use 256-bit SSL encryption and are PCI-DSS compliant. We do not
+   store your card details on our servers.
+
+Q: Do you offer gift cards?
+A: Yes! LuxeCart gift cards are available in ₹25, ₹50, ₹100, and ₹200 denominations.
+   They can be purchased from the "Gift Cards" section and are delivered digitally
+   via email.
+
+Q: How do I contact customer support?
+A: You can reach us via:
+   - Email: support@luxecart.com
+   - Live Chat: Mon–Sat, 9 AM – 9 PM IST
+   - Phone: +91 1800-LUXE-CART (toll-free) or +1 (800) 589-3227
+
+Q: Do you ship internationally?
+A: Yes, we ship to over 40 countries. International shipping takes 10–15 business
+   days for standard and 5–7 for express. Customs duties are the buyer's responsibility.
+
+Q: What is your return policy?
+A: Most items can be returned within 30 days of delivery in unused condition.
+   See our full Return & Refund Policy for details.
+
+Q: How does the demand forecasting feature work?
+A: Our AI-powered demand forecasting uses machine learning models (Gradient Boosting
+   and Random Forest) trained on historical sales data. The admin dashboard shows
+   predicted demand for each product, helping with inventory planning and promotional
+   strategy.
+
+Q: What is the RAG QA Assistant?
+A: The RAG (Retrieval-Augmented Generation) QA Assistant is an AI chatbot that answers
+   questions about LuxeCart products, policies, and services. It retrieves relevant
+   information from our knowledge base and generates accurate, context-aware responses.
+   You can access it via the floating chat icon on any page.

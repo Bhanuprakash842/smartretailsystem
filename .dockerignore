@@ -1,0 +1,18 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.github
+.pytest_cache
+.vscode
+.idea
+*.db-journal
+*.log
+docker-compose.yml
+Dockerfile
+README.md
+DOCS.md
+ecommerce_api_postman_collection.json
+# instance/*.db

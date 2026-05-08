@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    container_name: ecommerce_app
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - mysql_data:/app/instance
+    environment:
+      - SECRET_KEY=your-secret-key-here
+      - JWT_SECRET_KEY=your-jwt-key-here
+
+volumes:
+  mysql_data:

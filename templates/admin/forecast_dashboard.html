@@ -1,0 +1,631 @@
+{% extends "admin/layout.html" %}
+{% block title %}Demand Forecasting — LuxeCart Admin{% endblock %}
+{% block page_title %}📈 Demand Forecasting{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<style>
+  /* ── colour tokens ────────────────────────────────────── */
+  :root {
+    --fc-primary: #7C3AED;
+    --fc-primary-l: #A78BFA;
+    --fc-glass: rgba(124,58,237,0.06);
+    --fc-success: #10B981;
+    --fc-warn:   #F59E0B;
+    --fc-danger: #EF4444;
+  }
+
+  /* ── glass cards ─────────────────────────────────────── */
+  .fc-card {
+    background: #fff;
+    border: 1px solid #F3F4F6;
+    border-radius: 20px;
+    box-shadow: 0 4px 24px -8px rgba(0,0,0,.06);
+    transition: transform .25s, box-shadow .25s;
+  }
+  .fc-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px -10px rgba(124,58,237,.14);
+  }
+
+  /* ── KPI chips ───────────────────────────────────────── */
+  .kpi-chip {
+    background: var(--fc-glass);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .kpi-chip .kpi-val  { font-size: 2rem; font-weight: 800; color: var(--fc-primary); line-height: 1; }
+  .kpi-chip .kpi-label{ font-size: .75rem; font-weight: 600; text-transform: uppercase;
+                         letter-spacing: .08em; color: #6B7280; }
+
+  /* ── product pills ───────────────────────────────────── */
+  .product-pill {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background .2s, box-shadow .2s;
+    border: 2px solid transparent;
+  }
+  .product-pill:hover   { background: var(--fc-glass); }
+  .product-pill.selected{ border-color: var(--fc-primary); background: var(--fc-glass); }
+
+  /* ── range slider ────────────────────────────────────── */
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 5px;
+    border-radius: 5px; background: #E5E7EB; outline: none; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--fc-primary); cursor: pointer;
+    box-shadow: 0 0 0 4px rgba(124,58,237,.18);
+  }
+
+  /* ── table ───────────────────────────────────────────── */
+  .fc-table th { font-size: 11px; text-transform: uppercase; letter-spacing: .1em;
+                  color: #9CA3AF; font-weight: 700; padding: 12px 16px; text-align: left; }
+  .fc-table td { padding: 14px 16px; font-size: .875rem; }
+  .fc-table tbody tr:hover { background: var(--fc-glass); }
+  .fc-table tbody tr { border-bottom: 1px solid #F9FAFB; }
+
+  /* ── badge ───────────────────────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 99px; font-size: .7rem; font-weight: 700;
+  }
+  .badge-green  { background: #ECFDF5; color: var(--fc-success); }
+  .badge-amber  { background: #FFFBEB; color: var(--fc-warn); }
+  .badge-purple { background: #F5F3FF; color: var(--fc-primary); }
+
+  /* ── chart container ─────────────────────────────────── */
+  .chart-wrap { position: relative; height: 280px; }
+
+  /* ── loader ──────────────────────────────────────────── */
+  .spinner {
+    display: inline-block; width: 20px; height: 20px;
+    border: 3px solid #E5E7EB; border-top-color: var(--fc-primary);
+    border-radius: 50%; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Chatbot ─────────────────────────────────────────── */
+  .chat-btn {
+    position: fixed; bottom: 30px; right: 30px;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: var(--fc-primary); color: white;
+    box-shadow: 0 10px 25px -5px rgba(124,58,237,.5);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 1000; transition: transform 0.3s;
+  }
+  .chat-btn:hover { transform: scale(1.1); }
+  .chat-window {
+    position: fixed; bottom: 100px; right: 30px;
+    width: 350px; height: 450px; background: #fff;
+    border-radius: 20px; box-shadow: 0 20px 40px -10px rgba(0,0,0,.15);
+    display: flex; flex-direction: column; overflow: hidden;
+    z-index: 1000; transform: translateY(20px); opacity: 0;
+    pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #F3F4F6;
+  }
+  .chat-window.open {
+    transform: translateY(0); opacity: 1; pointer-events: all;
+  }
+  .chat-header {
+    background: var(--fc-primary); padding: 16px 20px;
+    color: white; font-weight: bold; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .chat-body {
+    flex: 1; padding: 20px; overflow-y: auto; background: #F9FAFB;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .chat-msg {
+    max-width: 85%; padding: 12px 16px; border-radius: 14px;
+    font-size: 0.875rem; line-height: 1.4;
+  }
+  .chat-msg.bot { background: white; border: 1px solid #E5E7EB; color: #374151; align-self: flex-start; border-bottom-left-radius: 4px; }
+  .chat-msg.user { background: var(--fc-primary); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .chat-input {
+    padding: 16px; background: white; border-top: 1px solid #F3F4F6;
+    display: flex; gap: 8px;
+  }
+  .chat-input input {
+    flex: 1; border: 1px solid #E5E7EB; border-radius: 99px;
+    padding: 8px 16px; outline: none; transition: border-color 0.2s;
+  }
+  .chat-input input:focus { border-color: var(--fc-primary); }
+  .chat-input button {
+    background: var(--fc-primary); color: white; border-radius: 50%;
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- ── Page Header ──────────────────────────────────────────────────── -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold text-gray-900">AI Demand Forecasting</h1>
+      <p class="text-sm text-gray-500 mt-1">Powered by per-product Random Forest + GradientBoosting models</p>
+    </div>
+    <!-- Date selector -->
+    <div class="flex items-center gap-3">
+      <label class="text-sm font-semibold text-gray-600">Forecast Date</label>
+      <input id="forecastDate" type="date" value="{{ today }}"
+             class="border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:outline-none
+                    focus:ring-2 focus:ring-primary/30 transition">
+      <button onclick="refreshAll()"
+              class="btn-admin px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-md">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- ── KPI Row ────────────────────────────────────────────────────────── -->
+  <div id="kpiRow" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    {% set total_qty = todays_predictions | sum(attribute='predicted_qty') %}
+    {% set total_rev = todays_predictions | sum(attribute='predicted_revenue') %}
+    {% set max_prod  = todays_predictions | max(attribute='predicted_qty') %}
+    <div class="kpi-chip fc-card p-5">
+      <span class="kpi-val" id="kpiTotalQty">{{ total_qty | round(0) | int }}</span>
+      <span class="kpi-label">Total Units Today</span>
+    </div>
+    <div class="kpi-chip fc-card p-5">
+      <span class="kpi-val" id="kpiTotalRev">₹{{ "%.0f" | format(total_rev) }}</span>
+      <span class="kpi-label">Expected Revenue</span>
+    </div>
+    <div class="kpi-chip fc-card p-5">
+      <span class="kpi-val">{{ todays_predictions | length }}</span>
+      <span class="kpi-label">Products Tracked</span>
+    </div>
+    <div class="kpi-chip fc-card p-5">
+      <span class="kpi-val" id="kpiMaxQty">{{ max_prod.predicted_qty | round(0) | int }}</span>
+      <span class="kpi-label" title="{{ max_prod.product_name }}">Peak Product Units</span>
+    </div>
+  </div>
+
+  <!-- ── Two-column: Product list + Weekly chart ───────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left: Product Picker -->
+    <div class="fc-card p-6 space-y-4">
+      <h2 class="text-base font-bold text-gray-800">Select Product</h2>
+      <div id="productList" class="space-y-2">
+        {% for pred in todays_predictions %}
+        <div class="product-pill {% if loop.first %}selected{% endif %}"
+             data-pid="{{ pred.product_id }}"
+             onclick="selectProduct({{ pred.product_id }}, this)">
+          <div>
+            <p class="text-sm font-semibold text-gray-800">{{ pred.product_name }}</p>
+            <p class="text-xs text-gray-400">{{ pred.model_used }}</p>
+          </div>
+          <!-- <div class="text-right">
+            <p class="text-lg font-extrabold text-primary">{{ pred.predicted_qty | round | int }}</p>
+            <p class="text-[10px] text-gray-400 uppercase tracking-wide">units</p>
+          </div> -->
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Promotion discount slider -->
+      <div class="pt-4 border-t border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-sm font-semibold text-gray-600">Promo Discount</label>
+          <span id="promoVal" class="text-sm font-bold text-primary">0%</span>
+        </div>
+        <input type="range" id="promoSlider" min="0" max="60" step="5" value="0"
+               oninput="document.getElementById('promoVal').textContent=this.value+'%'"
+               onchange="applyPromo()">
+        <p class="text-xs text-gray-400 mt-2">See how a flash sale affects demand</p>
+      </div>
+      <button onclick="applyPromo()"
+              class="w-full btn-admin py-2 rounded-xl text-sm font-semibold">
+        ✨ Apply Promo Simulation
+      </button>
+    </div>
+
+    <!-- Right: Weekly forecast chart -->
+    <div class="fc-card p-6 lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-bold text-gray-800">7-Day Demand Forecast</h2>
+        <span id="chartLoader" class="spinner hidden"></span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="weeklyChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 30-Day Range Chart ────────────────────────────────────────────── -->
+  <div class="fc-card p-6">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+      <h2 class="text-base font-bold text-gray-800">30-Day Range Forecast</h2>
+      <div class="flex items-center gap-3">
+        <label class="text-sm text-gray-500">Product</label>
+        <select id="rangeProduct"
+                class="border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+          {% for pred in todays_predictions %}
+          <option value="{{ pred.product_id }}">{{ pred.product_name }}</option>
+          {% endfor %}
+        </select>
+        <button onclick="loadRange()"
+                class="btn-admin px-4 py-2 rounded-xl text-sm font-semibold">Load</button>
+      </div>
+    </div>
+    <div class="chart-wrap" style="height:320px">
+      <canvas id="rangeChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Today's prediction table ─────────────────────────────────────── -->
+  <div class="fc-card overflow-hidden">
+    <div class="p-6 border-b border-gray-100">
+      <h2 class="text-base font-bold text-gray-800">Today's Prediction Summary</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="fc-table w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Predicted Units</th>
+            <th>95% CI Low</th>
+            <th>95% CI High</th>
+            <th>Revenue Forecast</th>
+            <th>Model</th>
+          </tr>
+        </thead>
+        <tbody id="summaryTable">
+          {% for p in todays_predictions %}
+          <tr>
+            <td class="font-semibold text-gray-800">{{ p.product_name }}</td>
+            <td><span class="badge badge-purple">{{ p.get('category','—') }}</span></td>
+            <td class="font-bold text-primary text-lg">{{ p.predicted_qty | round | int }}</td>
+            <td class="text-gray-500">{{ p.confidence_low | round | int }}</td>
+            <td class="text-gray-500">{{ p.confidence_high | round | int }}</td>
+            <td class="font-semibold text-green-600">₹{{ "%.2f" | format(p.predicted_revenue) }}</td>
+            <td><span class="badge badge-green text-[10px]">
+              {% if 'Random' in p.model_used %}🎯 RF{% else %}🌍 GBM{% endif %}
+            </span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Model metrics card -->
+  <div class="fc-card p-6" id="metricsCard">
+    <h2 class="text-base font-bold text-gray-800 mb-4">Model Performance Metrics</h2>
+    <div id="metricsContent" class="text-sm text-gray-500">Loading metrics…</div>
+  </div>
+
+</div>
+
+<!-- ── RAG QA Chatbot ────────────────────────────────────────────────── -->
+<div class="chat-btn" onclick="toggleChat()">
+  <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+  </svg>
+</div>
+
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+      <span>RAG QA Agent</span>
+    </div>
+    <button onclick="toggleChat()" class="text-white/80 hover:text-white">&times;</button>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <div class="chat-msg bot">Hello! I'm the AI RAG Agent for Demand Forecasting. Ask me about our products, predictions, or seasonal trends!</div>
+  </div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="if(event.key==='Enter') sendChat()">
+    <button onclick="sendChat()">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* ── Data injected from Flask ──────────────────────────────────────────── */
+const weeklyData = {{ weekly_data | tojson }};
+const allProducts = {{ products | tojson }};
+let selectedPid = {{ todays_predictions[0].product_id if todays_predictions else 1 }};
+
+/* ── Weekly chart ──────────────────────────────────────────────────────── */
+const wCtx = document.getElementById('weeklyChart').getContext('2d');
+const gradient = wCtx.createLinearGradient(0, 0, 0, 280);
+gradient.addColorStop(0, 'rgba(124,58,237,0.25)');
+gradient.addColorStop(1, 'rgba(124,58,237,0)');
+
+let weeklyChart = new Chart(wCtx, {
+  type: 'line',
+  data: buildWeeklyData(selectedPid),
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+               tooltip: { callbacks: {
+                 label: ctx => `  ${Math.round(ctx.parsed.y)} units`
+               }}},
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: 'Outfit', size: 12 } } },
+      y: { grid: { color: '#F3F4F6' }, beginAtZero: true,
+           ticks: { font: { family: 'Outfit', size: 12 }, precision: 0 } }
+    },
+    elements: { line: { tension: 0.45, borderWidth: 3, borderColor: '#7C3AED', backgroundColor: gradient },
+                point: { radius: 5, backgroundColor: '#7C3AED', borderColor: '#fff', borderWidth: 2 } }
+  }
+});
+
+function buildWeeklyData(pid) {
+  const d = weeklyData[pid] || { dates: [], qtys: [], name: '' };
+  return {
+    labels: d.dates,
+    datasets: [{ label: d.name, data: d.qtys.map(q => Math.round(q)), fill: true, backgroundColor: gradient, borderColor: '#7C3AED' }]
+  };
+}
+
+function selectProduct(pid, el) {
+  selectedPid = pid;
+  document.querySelectorAll('.product-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  updateWeeklyChart(pid);
+}
+
+async function updateWeeklyChart(pid) {
+  const d = document.getElementById('forecastDate').value;
+  const promo = document.getElementById('promoSlider').value / 100;
+  const loader = document.getElementById('chartLoader');
+  loader.classList.remove('hidden');
+  try {
+    const res = await fetch(`/forecast/api/predict/range?product_id=${pid}&start=${d}&end=${getNext7(d)}&promo=${promo}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    weeklyChart.data.labels = data.map(r => new Date(r.date).toLocaleDateString('en',{weekday:'short',day:'numeric'}));
+    weeklyChart.data.datasets[0].data = data.map(r => Math.round(r.predicted_qty));
+    weeklyChart.data.datasets[0].label = allProducts[pid]?.name || 'Product';
+    weeklyChart.update();
+  } finally {
+    loader.classList.add('hidden');
+  }
+}
+
+/* ── Range chart ───────────────────────────────────────────────────────── */
+const rCtx = document.getElementById('rangeChart').getContext('2d');
+let rangeChart = new Chart(rCtx, {
+  type: 'bar',
+  data: { labels: [], datasets: [
+    { label: 'Predicted Qty', data: [], backgroundColor: 'rgba(124,58,237,0.7)', borderRadius: 6 },
+    { label: 'CI Low',  data: [], type: 'line', borderColor: '#A78BFA', borderDash: [5,3],
+      pointRadius: 0, fill: false, tension: 0.4 },
+    { label: 'CI High', data: [], type: 'line', borderColor: '#10B981', borderDash: [5,3],
+      pointRadius: 0, fill: false, tension: 0.4 },
+  ]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { font: { family: 'Outfit', size: 12 } } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { family: 'Outfit', size: 11 } } },
+      y: { grid: { color: '#F3F4F6' }, beginAtZero: true,
+           ticks: { font: { family: 'Outfit', size: 12 }, precision: 0 } }
+    }
+  }
+});
+
+async function loadRange() {
+  const pid   = document.getElementById('rangeProduct').value;
+  const start = document.getElementById('forecastDate')?.value || new Date().toISOString().split('T')[0];
+  const startObj = new Date(start);
+  startObj.setDate(startObj.getDate() + 29);
+  const end = startObj.toISOString().split('T')[0];
+  const promo = document.getElementById('promoSlider')?.value / 100 || 0;
+  
+  const res   = await fetch(`/forecast/api/predict/range?product_id=${pid}&start=${start}&end=${end}&promo=${promo}`);
+  const data  = await res.json();
+  if (data.error) throw new Error(data.error);
+  rangeChart.data.labels                     = data.map(r => r.date.slice(5));   // MM-DD
+  rangeChart.data.datasets[0].data           = data.map(r => Math.round(r.predicted_qty));
+  rangeChart.data.datasets[1].data           = data.map(r => Math.round(r.confidence_low));
+  rangeChart.data.datasets[2].data           = data.map(r => Math.round(r.confidence_high));
+  rangeChart.update();
+}
+loadRange();
+
+/* ── Refresh all (date change) ─────────────────────────────────────────── */
+async function refreshAll() {
+  const d = document.getElementById('forecastDate').value;
+  const promo = document.getElementById('promoSlider').value / 100;
+  const loader = document.getElementById('chartLoader');
+  loader.classList.remove('hidden');
+  
+  // Artificial delay to simulate model calculation
+  await new Promise(r => setTimeout(r, 800));
+
+  try {
+    const res  = await fetch(`/forecast/api/predict/all?date=${d}&promo=${promo}`);
+    const preds = await res.json();
+    if (preds.error) throw new Error(preds.error);
+
+    // update product pills
+    preds.forEach(p => {
+      const pill = document.querySelector(`.product-pill[data-pid="${p.product_id}"]`);
+      if (pill) {
+        const qtyEl = pill.querySelector('.text-lg');
+        if (qtyEl) {
+          qtyEl.textContent = Math.round(p.predicted_qty);
+        }
+      }
+    });
+
+    // update summary table
+    const tbody = document.getElementById('summaryTable');
+    tbody.innerHTML = preds.map(p => `
+      <tr>
+        <td class="font-semibold text-gray-800">${p.product_name}</td>
+        <td><span class="badge badge-purple">${p.category||'—'}</span></td>
+        <td class="font-bold text-primary text-lg">${Math.round(p.predicted_qty)}</td>
+        <td class="text-gray-500">${Math.round(p.confidence_low)}</td>
+        <td class="text-gray-500">${Math.round(p.confidence_high)}</td>
+        <td class="font-semibold text-green-600">₹${p.predicted_revenue.toFixed(2)}</td>
+        <td><span class="badge badge-green text-[10px]">${p.model_used.includes('Random') ? '🎯 RF' : '🌍 GBM'}</span></td>
+      </tr>`).join('');
+      
+    // update KPIs
+    const totalQty = preds.reduce((sum, p) => sum + p.predicted_qty, 0);
+    const totalRev = preds.reduce((sum, p) => sum + p.predicted_revenue, 0);
+    const maxProd = preds.reduce((max, p) => p.predicted_qty > max.predicted_qty ? p : max, preds[0]);
+    document.getElementById('kpiTotalQty').textContent = Math.round(totalQty);
+    document.getElementById('kpiTotalRev').textContent = '₹' + Math.round(totalRev);
+    document.getElementById('kpiMaxQty').textContent = Math.round(maxProd.predicted_qty);
+    document.getElementById('kpiMaxQty').nextElementSibling.title = maxProd.product_name;
+
+    // refresh charts
+    await updateWeeklyChart(selectedPid);
+    await loadRange();
+  } catch(e) {
+    console.error(e);
+    alert('Prediction failed: ' + e.message);
+  } finally {
+    loader.classList.add('hidden');
+  }
+}
+
+/* ── Promo simulation ──────────────────────────────────────────────────── */
+async function applyPromo() {
+  const btn = document.querySelector('button[onclick="applyPromo()"]');
+  const originalText = btn.innerHTML;
+  if(btn) {
+    btn.innerHTML = `<span class="spinner" style="width: 14px; height: 14px; border-width: 2px; margin-right: 8px; vertical-align: middle;"></span> Calculating Demand...`;
+    btn.disabled = true;
+    btn.style.opacity = 0.7;
+  }
+
+  await refreshAll();
+
+  if(btn) {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+    btn.style.opacity = 1;
+  }
+}
+
+function getNext7(startDateStr) {
+  const d = new Date(startDateStr);
+  d.setDate(d.getDate() + 6);
+  return d.toISOString().split('T')[0];
+}
+
+/* ── Load metrics ──────────────────────────────────────────────────────── */
+async function loadMetrics() {
+  const res = await fetch('/forecast/api/metrics');
+  if (!res.ok) {
+    document.getElementById('metricsContent').innerHTML =
+      '<span class="text-amber-500">⚠ No trained model found. Run <code class="bg-gray-100 px-2 py-0.5 rounded">python forecasting/train_model.py</code> first.</span>';
+    return;
+  }
+  const m = await res.json();
+  const html = `
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="kpi-chip">
+        <span class="kpi-val text-2xl">${m.global_model?.mae ?? '—'}</span>
+        <span class="kpi-label">Global MAE</span>
+      </div>
+      <div class="kpi-chip">
+        <span class="kpi-val text-2xl">${m.global_model?.rmse ?? '—'}</span>
+        <span class="kpi-label">Global RMSE</span>
+      </div>
+      <div class="kpi-chip">
+        <span class="kpi-val text-2xl">${m.global_model?.r2 ?? '—'}</span>
+        <span class="kpi-label">Global R²</span>
+      </div>
+    </div>
+    <div class="mt-4 overflow-x-auto">
+      <table class="fc-table w-full">
+        <thead class="bg-gray-50"><tr>
+          <th>Product</th><th>MAE</th><th>RMSE</th><th>R²</th>
+        </tr></thead>
+        <tbody>
+          ${Object.values(m.per_product_models || {}).map(p => `
+            <tr>
+              <td class="font-semibold">${p.product_name}</td>
+              <td>${p.mae}</td><td>${p.rmse}</td>
+              <td><span class="badge ${p.r2 > 0.8 ? 'badge-green' : p.r2 > 0.6 ? 'badge-amber' : 'badge-purple'}">${p.r2}</span></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('metricsContent').innerHTML = html;
+}
+loadMetrics();
+
+/* ── Chatbot functionality ─────────────────────────────────────────────── */
+function toggleChat() {
+  document.getElementById('chatWindow').classList.toggle('open');
+  if(document.getElementById('chatWindow').classList.contains('open')) {
+    document.getElementById('chatInput').focus();
+  }
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  const chatBody = document.getElementById('chatBody');
+  
+  // user message
+  const userDiv = document.createElement('div');
+  userDiv.className = 'chat-msg user';
+  userDiv.textContent = text;
+  chatBody.appendChild(userDiv);
+  
+  input.value = '';
+  chatBody.scrollTop = chatBody.scrollHeight;
+  
+  // loading indicator
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'chat-msg bot text-gray-400 italic';
+  loadingDiv.textContent = 'Searching knowledge base...';
+  chatBody.appendChild(loadingDiv);
+  chatBody.scrollTop = chatBody.scrollHeight;
+  
+  try {
+    const res = await fetch('/forecast/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: text })
+    });
+    const data = await res.json();
+    
+    // remove loading
+    chatBody.removeChild(loadingDiv);
+    
+    // bot message
+    const botDiv = document.createElement('div');
+    botDiv.className = 'chat-msg bot';
+    // basic markdown bold parsing for the simulated response
+    botDiv.innerHTML = data.answer.replace(/\*\*(.*?)\*\*/g, '<strong>₹1</strong>');
+    chatBody.appendChild(botDiv);
+    
+  } catch(e) {
+    chatBody.removeChild(loadingDiv);
+    const errDiv = document.createElement('div');
+    errDiv.className = 'chat-msg bot text-red-500';
+    errDiv.textContent = 'Error connecting to RAG Agent.';
+    chatBody.appendChild(errDiv);
+  }
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+</script>
+{% endblock %}
