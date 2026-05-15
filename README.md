@@ -2,6 +2,12 @@
 
 LuxeCart is an advanced, AI-powered e-commerce platform that integrates a full-featured customer frontend, an administrative dashboard, and a cutting-edge Retrieval-Augmented Generation (RAG) chatbot capable of domain-specific customer support and real-time demand forecasting analytics.
 
+## Demo Video
+
+<video width="100%" controls>
+  <source src="./demo.mp4" type="video/mp4">
+</video>
+
 ## Features
 - **Customer Frontend**: Browse products, manage your cart, and securely checkout.
 - **Admin Dashboard**: Manage inventory, fulfill orders, and monitor business metrics via PowerBI analytics.
