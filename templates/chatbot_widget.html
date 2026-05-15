@@ -589,16 +589,16 @@
     function formatMarkdown(text) {
         return text
             // Bold
-            .replace(/\*\*(.+?)\*\*/g, "<strong></strong>")
+            .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
             // Italic
-            .replace(/\*(.+?)\*/g, "<em></em>")
+            .replace(/\*(.+?)\*/g, "<em>$1</em>")
             // Inline code
-            .replace(/`(.+?)`/g, "<code></code>")
+            .replace(/`(.+?)`/g, "<code>$1</code>")
             // Unordered lists
-            .replace(/^[-•]\s+(.+)$/gm, "<li></li>")
+            .replace(/^[-•]\s+(.+)$/gm, "<li>$1</li>")
             .replace(/(<li>.*<\/li>\n?)+/gs, (m) => "<ul>" + m + "</ul>")
             // Ordered lists
-            .replace(/^\d+\.\s+(.+)$/gm, "<li></li>")
+            .replace(/^\d+\.\s+(.+)$/gm, "<li>$1</li>")
             // Line breaks
             .replace(/\n{2,}/g, "<br><br>")
             .replace(/\n/g, "<br>");

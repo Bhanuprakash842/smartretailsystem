@@ -1,0 +1,103 @@
+{% extends "admin/layout.html" %}
+{% block title %}Power BI Analytics — LuxeCart Admin{% endblock %}
+{% block page_title %}📊 Power BI Business Intelligence{% endblock %}
+
+{% block extra_head %}
+<style>
+    .bi-container {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 200px);
+        min-height: 600px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .bi-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .config-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .alert-info {
+        background: #e0f2fe;
+        color: #0369a1;
+        border-left: 4px solid #0ea5e9;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .btn-primary {
+        background: #10b981;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Integration Steps (Only visible if URL is not set or for guidance) -->
+    <!-- <div class="config-card"> -->
+        <!-- <h4 class="font-bold mb-2">Connect Your Power BI Report</h4>
+        <p class="text-gray-600 mb-4">
+            To see your live analytics, publish your report to Power BI Service and paste the embed URL below.
+            The data is currently sourced from <code>forecasting/data/sales_orders.csv</code>.
+        </p>
+        
+        <div class="alert-info">
+            <strong>Pro Tip:</strong> For real-time updates, host your CSV on OneDrive/SharePoint and connect Power BI to the cloud URL.
+        </div> -->
+
+        {% if not bi_embed_url %}
+        <div class="mt-4 p-6 border-2 border-dashed border-gray-300 rounded-xl text-center">
+            <div class="mb-4">
+                <i class="fas fa-chart-bar text-4xl text-gray-400"></i>
+            </div>
+            <h5 class="text-xl font-semibold">No Report Connected</h5>
+            <p class="text-gray-500 max-w-md mx-auto mb-6">
+                Follow the steps in the documentation to generate your Power BI embed URL and update the configuration.
+            </p>
+            <a href="https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-publish-to-web" target="_blank" class="btn-primary">
+                Learn How to Embed
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Power BI Iframe Container -->
+    {% if bi_embed_url %}
+    <div class="bi-container">
+        <iframe 
+            title="LuxeCart Power BI Report" 
+            class="bi-iframe" 
+            src="{{ bi_embed_url }}" 
+            frameborder="0" 
+            allowFullScreen="true">
+        </iframe>
+    </div>
+    {% endif %}
+<!-- </div> -->
+{% endblock %}

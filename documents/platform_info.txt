@@ -1,0 +1,25 @@
+# LuxeCart Platform & Team Information
+
+## About LuxeCart
+LuxeCart is a premium e-commerce platform dedicated to bringing high-quality electronics, fashion, and home decor to discerning customers. Founded in 2024, our mission is to combine luxury with cutting-edge technology.
+
+## Technology Stack
+- **Frontend**: HTML5, Vanilla CSS, Tailwind CSS, JavaScript.
+- **Backend**: Python (Flask).
+- **Database**: Azure SQL (MSSQL) with SQLAlchemy ORM.
+- **AI/ML**: Demand forecasting using GradientBoosting and Random Forest models.
+- **Chatbot**: RAG system powered by Google Gemini (LLM) and Pinecone (Vector Database).
+
+## Our AI Vision
+We leverage machine learning not just for recommendations, but for operational excellence. Our demand forecasting system predicts future sales with over 85% accuracy, allowing us to minimize waste and ensure products are always available when you need them.
+
+## Sustainability Commitment
+LuxeCart is committed to reducing our carbon footprint. 
+- 80% of our packaging is biodegradable.
+- We prioritize suppliers who follow ethical labor practices.
+- Our delivery routes are optimized by AI to reduce fuel consumption.
+
+## Contact Information
+- **Customer Support**: support@luxecart.com
+- **Business Inquiries**: business@luxecart.com
+- **Office**: 4th Floor, Tech Park, Indiranagar, Bangalore, KA, India.

@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, request, render_template, redirect, url_for, session, flash, current_app
 from werkzeug.security import check_password_hash
 from models import db, ProductModel, UserModel, OrderModel
@@ -105,6 +106,14 @@ def admin_update_order_status(order_id):
 @admin_required
 def admin_users():
     return render_template('admin/users.html', users=UserModel.query.order_by(UserModel.created_at.desc()).all(), **get_common_context())
+
+@admin_bp.route('/bi-analytics')
+@admin_required
+def admin_bi_analytics():
+    # In a real scenario, this URL would come from a configuration or database
+    # For now, we provide a placeholder or allow setting it via environment variable
+    bi_embed_url = current_app.config.get('POWERBI_EMBED_URL') or os.getenv('POWERBI_EMBED_URL')
+    return render_template('admin/powerbi_analytics.html', bi_embed_url=bi_embed_url, **get_common_context())
 
 @admin_bp.route('/logout')
 def admin_logout():

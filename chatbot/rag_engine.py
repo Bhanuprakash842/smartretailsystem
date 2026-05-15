@@ -145,28 +145,51 @@ def _generate_product_chunks(products: list) -> List[Dict]:
 # ---------------------------------------------------------------------------
 
 def _embed_texts(texts: List[str], task_type: str = "retrieval_document") -> List[List[float]]:
-    """Get embeddings from Google Gemini (free). Batched to avoid 429 rate limits."""
+    """Get embeddings from Google Gemini with retry logic."""
+    import time
     genai = _get_genai()
-    result = genai.embed_content(
-        model=GEMINI_EMBED_MODEL,
-        content=texts,
-        task_type=task_type,
-        output_dimensionality=EMBEDDING_DIMENSION,
-    )
-    # The API returns a list of embeddings when content is a list of strings
-    return result["embedding"]
+    
+    for attempt in range(3):
+        try:
+            result = genai.embed_content(
+                model=GEMINI_EMBED_MODEL,
+                content=texts,
+                task_type=task_type,
+                output_dimensionality=EMBEDDING_DIMENSION,
+            )
+            return result["embedding"]
+        except Exception as e:
+            if "429" in str(e) or "quota" in str(e).lower():
+                wait = (attempt + 1) * 5
+                print(f"[RAG] Rate limit hit. Retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                raise e
+    raise Exception("Max retries exceeded for embedding generation.")
 
 
 def _embed_query(text: str) -> List[float]:
-    """Embed a search query (uses retrieval_query task type for better results)."""
+    """Embed a search query with retry logic."""
+    import time
     genai = _get_genai()
-    result = genai.embed_content(
-        model=GEMINI_EMBED_MODEL,
-        content=text,
-        task_type="retrieval_query",
-        output_dimensionality=EMBEDDING_DIMENSION,
-    )
-    return result["embedding"]
+    
+    for attempt in range(3):
+        try:
+            result = genai.embed_content(
+                model=GEMINI_EMBED_MODEL,
+                content=text,
+                task_type="retrieval_query",
+                output_dimensionality=EMBEDDING_DIMENSION,
+            )
+            return result["embedding"]
+        except Exception as e:
+            if "429" in str(e) or "quota" in str(e).lower():
+                wait = (attempt + 1) * 2
+                print(f"[RAG] Rate limit hit on query. Retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                raise e
+    raise Exception("Max retries exceeded for query embedding.")
 
 
 # ---------------------------------------------------------------------------

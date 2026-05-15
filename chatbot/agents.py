@@ -9,6 +9,8 @@ Agents:
   2. 🎧  Customer Support      — shipping, returns, refunds, FAQs
   3. 📊  Business Intelligence — forecasting, analytics, inventory insights
 
+Off-topic / out-of-domain queries are politely declined.
+
 Technology:
   - LangGraph StateGraph for orchestration
   - Google Gemini 2.0 Flash (free) for LLM
@@ -31,6 +33,7 @@ from langgraph.graph import StateGraph, START, END
 
 from chatbot.config import (
     GEMINI_API_KEY, GEMINI_CHAT_MODEL,
+    GROQ_API_KEY, GROQ_CHAT_MODEL,
     NS_PRODUCTS, NS_POLICIES, NS_ANALYTICS, TOP_K,
 )
 
@@ -54,47 +57,79 @@ class AgentState(TypedDict):
 #  GEMINI LLM HELPER
 # ═══════════════════════════════════════════════════════════════════════════════
 
-_gemini_model = None
+# ── Providers ──
+_gemini_client = None
+_groq_client = None
 
-
-def _get_model():
-    """Lazy-load and cache the Gemini generative model."""
-    global _gemini_model
-    if _gemini_model is None:
+def _get_gemini():
+    global _gemini_client
+    if _gemini_client is None and GEMINI_API_KEY:
         import google.generativeai as genai
         genai.configure(api_key=GEMINI_API_KEY)
-        _gemini_model = genai.GenerativeModel(
-            GEMINI_CHAT_MODEL,
-            generation_config={
-                "temperature": 0.3,
-                "max_output_tokens": 1024,
-            },
-        )
-    return _gemini_model
+        _gemini_client = genai.GenerativeModel(GEMINI_CHAT_MODEL)
+    return _gemini_client
 
+def _get_groq():
+    global _groq_client
+    if _groq_client is None and GROQ_API_KEY:
+        try:
+            from groq import Groq
+            _groq_client = Groq(api_key=GROQ_API_KEY)
+        except ImportError:
+            print("[LLM Debug] groq package not installed — run: pip install groq")
+    return _groq_client
 
 def _llm(prompt: str) -> str:
-    """Send a prompt to Gemini and return the text response."""
-    model = _get_model()
-    response = model.generate_content(prompt)
-    return response.text.strip()
+    """Send a prompt to LLM with fallback support (Gemini -> Groq)."""
+    # 1. Try Gemini
+    gemini = _get_gemini()
+    if gemini:
+        try:
+            response = gemini.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            print(f"[LLM Error] Gemini failed: {e}")
+    else:
+        print("[LLM Debug] Gemini client not initialized (check GEMINI_API_KEY)")
+    
+    # 2. Try Groq
+    groq = _get_groq()
+    if groq:
+        try:
+            response = groq.chat.completions.create(
+                model=GROQ_CHAT_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"[LLM Error] Groq failed: {e}")
+    else:
+        print("[LLM Debug] Groq client not initialized (check GROQ_API_KEY)")
+            
+    return "Error: All LLM providers failed. Please check your API keys in the .env file and restart the server."
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  NODE 1: ROUTER / SUPERVISOR
 # ═══════════════════════════════════════════════════════════════════════════════
 
-ROUTER_PROMPT = """You are a query classifier for the LuxeCart e-commerce platform.
+ROUTER_PROMPT = """You are a strict query classifier for the LuxeCart e-commerce platform.
+Your job is to determine if the user's question is related to the LuxeCart retail domain.
 
 Classify the user's question into EXACTLY ONE of these categories:
-- "product"   → Questions about products, features, specs, pricing, availability, comparisons, recommendations
-- "support"   → Questions about shipping, returns, refunds, payment, orders, tracking, account, FAQs, policies, how-to
-- "analytics" → Questions about demand forecasting, sales trends, inventory, analytics, business insights, company info
+- "product"    → Questions about products, features, specs, pricing, availability, comparisons, recommendations
+- "support"    → Questions about shipping, returns, refunds, payment, orders, tracking, account, FAQs, policies, how-to
+- "analytics"  → Questions about demand forecasting, sales trends, inventory, analytics, business insights, company info
+- "off_topic"  → ANYTHING that does NOT relate to LuxeCart products, customer support, or business analytics. This includes: general knowledge, math, science, coding, history, geography, jokes, politics, weather, personal advice, other companies/brands, etc.
+
+IMPORTANT: Greetings like "hi", "hello", "hey" should be classified as "off_topic".
+If in doubt, classify as "off_topic".
 
 User question: "{query}"
 
 Respond with ONLY a JSON object (no markdown, no code fences):
-{{"category": "product|support|analytics", "reasoning": "one sentence explanation"}}
+{{"category": "product|support|analytics|off_topic", "reasoning": "one sentence explanation"}}
 """
 
 
@@ -109,7 +144,7 @@ def router_node(state: AgentState) -> dict:
         if raw.startswith("json"):
             raw = raw[4:].strip()
         result = json.loads(raw)
-        category = result.get("category", "support")
+        category = result.get("category", "off_topic")
         reasoning = result.get("reasoning", "")
     except Exception:
         # Fallback classification via keyword matching
@@ -119,13 +154,18 @@ def router_node(state: AgentState) -> dict:
                                  "compare", "stock", "available", "cost", "feature"]):
             category = "product"
             reasoning = "Keyword match: product-related terms detected"
+        elif any(w in q for w in ["ship", "return", "refund", "order", "track",
+                                   "payment", "cancel", "delivery", "policy", "faq"]):
+            category = "support"
+            reasoning = "Keyword match: support-related terms detected"
         elif any(w in q for w in ["forecast", "demand", "trend", "analytics", "sales",
-                                   "inventory", "insight", "company", "about", "revenue"]):
+                                   "inventory", "insight", "company", "about", "revenue",
+                                   "luxecart", "who are you"]):
             category = "analytics"
             reasoning = "Keyword match: analytics-related terms detected"
         else:
-            category = "support"
-            reasoning = "Default: general support query"
+            category = "off_topic"
+            reasoning = "No domain-specific keywords found — off-topic"
 
     return {
         "agent_type": category,
@@ -152,10 +192,10 @@ Your expertise:
 • Compatibility details
 
 Rules:
-1. ONLY use the retrieved product context below to answer. Never fabricate specs or prices.
-2. Always mention the exact price with ₹ sign when discussing a product.
-3. If comparing products, use a clear format (bullet points or table-style).
-4. If the context doesn't contain the answer, say so honestly and suggest contacting support.
+1. Use the retrieved product context below to answer. 
+2. If the context doesn't contain the answer, you may use your internal knowledge about common electronics, fashion, and decor, but state that you are providing general information.
+3. Always mention the exact price with ₹ sign when discussing a product from our catalog.
+4. If comparing products, use a clear format (bullet points or table-style).
 5. Be enthusiastic but professional — you love these products!
 6. Use markdown formatting for readability.
 """
@@ -203,11 +243,11 @@ Your expertise:
 • FAQ / general help
 
 Rules:
-1. ONLY use the retrieved policy context below to answer. Never make up policies.
-2. Be warm, empathetic, and solution-oriented.
-3. When explaining processes, use numbered steps.
-4. Always mention relevant contact details when appropriate (email, phone, chat hours).
-5. If you can't find the answer in context, direct the customer to support@luxecart.com.
+1. Use the retrieved policy context below to answer.
+2. If the answer is not in the context, use your general knowledge to provide a helpful response while advising the customer to confirm with support@luxecart.com.
+3. Be warm, empathetic, and solution-oriented.
+4. When explaining processes, use numbered steps.
+5. Always mention relevant contact details when appropriate (email, phone, chat hours).
 6. Use markdown formatting for readability.
 """
 
@@ -254,11 +294,12 @@ Your expertise:
 
 Rules:
 1. Use the retrieved context AND any live data provided below.
-2. When discussing forecasts, mention that they use ML models (GBM & RF).
-3. Provide actionable insights — don't just state numbers, explain what they mean.
-4. If asked about specific product forecasts, suggest using the Demand Forecasting dashboard.
-5. Be data-driven and professional.
-6. Use markdown formatting for readability.
+2. If asked about general business concepts or analytics outside our specific data, feel free to use your general knowledge.
+3. When discussing forecasts, mention that they use ML models (GBM & RF).
+4. Provide actionable insights — don't just state numbers, explain what they mean.
+5. If asked about specific product forecasts, suggest using the Demand Forecasting dashboard.
+6. Be data-driven and professional.
+7. Use markdown formatting for readability.
 """
 
 
@@ -298,6 +339,29 @@ def analytics_agent_node(state: AgentState) -> dict:
     }
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  NODE 2d: OFF-TOPIC HANDLER 🚫
+# ═══════════════════════════════════════════════════════════════════════════════
+
+OFF_TOPIC_MESSAGE = (
+    "I appreciate your question, but that falls **outside my area of expertise**. 😊\n\n"
+    "I'm the **LuxeCart AI Assistant**, and I'm specifically designed to help you with:\n\n"
+    "- 🛍️ **Products** — Browse our catalog, compare items, check prices & availability\n"
+    "- 🎧 **Customer Support** — Shipping, returns, refunds, orders & account help\n"
+    "- 📊 **Business Analytics** — Demand forecasting, sales trends & inventory insights\n\n"
+    "Please ask me something related to **LuxeCart** and I'll be happy to help!"
+)
+
+
+def off_topic_handler_node(state: AgentState) -> dict:
+    """Off-topic handler — politely declines queries outside the LuxeCart domain."""
+    return {
+        "context_chunks": [],
+        "answer": OFF_TOPIC_MESSAGE,
+        "sources": [],
+    }
+
+
 def _get_live_analytics() -> str:
     """Pull live stats from the database for the BI agent."""
     try:
@@ -331,6 +395,7 @@ AGENT_LABELS = {
     "product": "🛍️ Product Specialist",
     "support": "🎧 Customer Support",
     "analytics": "📊 Business Intelligence",
+    "off_topic": "🚫 Off-Topic",
 }
 
 
@@ -354,6 +419,7 @@ def _build_graph() -> StateGraph:
     graph.add_node("product_agent", product_agent_node)
     graph.add_node("support_agent", support_agent_node)
     graph.add_node("analytics_agent", analytics_agent_node)
+    graph.add_node("off_topic_handler", off_topic_handler_node)
     graph.add_node("response", response_node)
 
     # Entry point
@@ -367,6 +433,7 @@ def _build_graph() -> StateGraph:
             "product": "product_agent",
             "support": "support_agent",
             "analytics": "analytics_agent",
+            "off_topic": "off_topic_handler",
         },
     )
 
@@ -374,6 +441,7 @@ def _build_graph() -> StateGraph:
     graph.add_edge("product_agent", "response")
     graph.add_edge("support_agent", "response")
     graph.add_edge("analytics_agent", "response")
+    graph.add_edge("off_topic_handler", "response")
 
     # Response → END
     graph.add_edge("response", END)

@@ -1,0 +1,25 @@
+# Inventory Management & Stock Policies
+
+## Stock Level Definitions
+- **In Stock**: Product is available and ready for immediate dispatch.
+- **Low Stock**: Product has fewer than 10 units remaining. Dashboard alerts are triggered for admins.
+- **Out of Stock**: Product is currently unavailable. Customers can sign up for "Back in Stock" notifications.
+- **Pre-order**: New product launches that can be reserved before the official release date.
+
+## Replenishment Cycle
+Our inventory is reviewed daily based on the AI-powered demand forecasting models (GradientBoosting and Random Forest). 
+- **Electronics**: Weekly restock cycle.
+- **Fashion**: Seasonal restock cycle.
+- **Home Decor**: Bi-weekly restock cycle.
+
+## Quality Control
+All products undergo a 3-point quality check before being added to the stock:
+1. Packaging integrity check.
+2. Functional verification (for electronics).
+3. Aesthetic inspection (for fashion and decor).
+
+## Warehouse Locations
+LuxeCart operates from three primary fulfillment centers:
+- **North Zone**: Delhi NCR (Primary hub for Electronics)
+- **West Zone**: Mumbai (Primary hub for Fashion)
+- **South Zone**: Bangalore (Primary hub for Tech & Wearables)

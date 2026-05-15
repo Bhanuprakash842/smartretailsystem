@@ -12,9 +12,13 @@ load_dotenv()
 
 # ── Google Gemini (FREE) ──────────────────────────────────────────────────────
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_CHAT_MODEL = "gemini-2.5-flash"          # free-tier model
-GEMINI_EMBED_MODEL = "models/gemini-embedding-2" # free embedding model
-EMBEDDING_DIMENSION = 768                         # text-embedding-004 default
+GEMINI_CHAT_MODEL    = "gemini-2.0-flash"           # Confirmed available
+GEMINI_EMBED_MODEL   = "models/gemini-embedding-001" # Confirmed available
+EMBEDDING_DIMENSION  = 768                           # Truncated to match Pinecone index
+
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_CHAT_MODEL      = "llama-3.3-70b-versatile"  # or "openai/gpt-oss-120b"
 
 # ── Pinecone ──────────────────────────────────────────────────────────────────
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
@@ -42,4 +46,6 @@ DOC_NAMESPACE_MAP = {
     "return_refund_policy.txt":  NS_POLICIES,
     "faq.txt":                   NS_POLICIES,
     "about_luxecart.txt":        NS_ANALYTICS,
+    "inventory_management.txt":  NS_ANALYTICS,
+    "platform_info.txt":         NS_ANALYTICS,
 }
