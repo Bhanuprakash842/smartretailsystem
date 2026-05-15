@@ -154,3 +154,4 @@ cython_debug/
 # Custom data files
 uploads/
 # *.db
+.env
