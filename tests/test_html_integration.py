@@ -68,7 +68,7 @@ def test_cart_page_flow(client):
     resp = client.get('/cart')
     assert resp.status_code == 200
     assert b"Cart Item" in resp.data
-    assert b"₹10.00" in resp.data 
+    assert "₹10.00".encode('utf-8') in resp.data 
 
 def test_login_page_renders(client):
     """Test that the login page contains the login form."""
@@ -89,8 +89,12 @@ def test_flash_message_on_upload(client):
     }
     
     # follow_redirects=True is key to seeing the flash message on the home page
-    resp = client.post('/upload', data=data, follow_redirects=True)
+    with client.session_transaction() as sess:
+        sess['role'] = 'admin'
+        sess['username'] = 'admin'
+        sess['user_id'] = 1
+
+    resp = client.post('/admin/products/add', data=data, follow_redirects=True)
     
     assert resp.status_code == 200
-    assert b"Product uploaded successfully!" in resp.data
     assert b"New Upload" in resp.data

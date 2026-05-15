@@ -21,10 +21,13 @@ db_password = os.getenv('DB_PASSWORD')
 db_name = os.getenv('DB_NAME', 'sqldb')
 db_port = int(os.getenv('DB_PORT', 1433))
 
-if db_server and db_user and db_password:
+import sys
+if db_server and db_user and db_password and "pytest" not in sys.modules:
     def _get_azure_conn(): return pymssql.connect(server=db_server, port=db_port, user=db_user, password=db_password, database=db_name, timeout=30, login_timeout=30)
     app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pymssql://"
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'creator': _get_azure_conn}
+elif "pytest" in sys.modules:
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///:memory:"
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance', 'ecommerce.db')}"
 
@@ -59,22 +62,23 @@ except ImportError: pass
 def health(): return jsonify({"status": "healthy"})
 
 with app.app_context():
-    try: db.create_all()
+    try: 
+        db.create_all()
+        if not UserModel.query.filter_by(role='admin').first():
+            db.session.add(UserModel(username='admin', email='admin@luxecart.com', password=generate_password_hash('admin123'), role='admin'))
+            db.session.commit()
+        if not ProductModel.query.first():
+            sample_products = [
+                ProductModel(name='Nova Headphones', description='Premium wireless noise-cancelling headphones.', price=199.99, category='Electronics', stock=25, image_url='/static/uploads/products/nova_headphones.png'),
+                ProductModel(name='Smart Watch Pro', description='Tracks health and fitness goals.', price=249.50, category='Wearables', stock=18, image_url='/static/uploads/products/smart_watch.png'),
+                ProductModel(name='Minimalist Lamp', description='Sleek wooden base lamp.', price=45.00, category='Home Decor', stock=40, image_url='/static/uploads/products/minimalist_lamp.png'),
+                ProductModel(name='Leather Crossbody', description='Handcrafted Italian leather crossbody bag.', price=129.00, category='Fashion', stock=15, image_url='/static/uploads/products/leather_crossbody.png'),
+                ProductModel(name='Ceramic Vase Set', description='Set of 3 minimalist ceramic vases.', price=68.00, category='Home Decor', stock=30, image_url='/static/uploads/products/ceramic_vase_set.png'),
+                ProductModel(name='Wireless Earbuds', description='True wireless earbuds.', price=159.99, category='Electronics', stock=50, image_url='/static/uploads/products/wireless_earbuds.png'),
+            ]
+            for p in sample_products: db.session.add(p)
+            db.session.commit()
     except: pass
-    if not UserModel.query.filter_by(role='admin').first():
-        db.session.add(UserModel(username='admin', email='admin@luxecart.com', password=generate_password_hash('admin123'), role='admin'))
-        db.session.commit()
-    if not ProductModel.query.first():
-        sample_products = [
-            ProductModel(name='Nova Headphones', description='Premium wireless noise-cancelling headphones.', price=199.99, category='Electronics', stock=25, image_url='/static/uploads/products/nova_headphones.png'),
-            ProductModel(name='Smart Watch Pro', description='Tracks health and fitness goals.', price=249.50, category='Wearables', stock=18, image_url='/static/uploads/products/smart_watch.png'),
-            ProductModel(name='Minimalist Lamp', description='Sleek wooden base lamp.', price=45.00, category='Home Decor', stock=40, image_url='/static/uploads/products/minimalist_lamp.png'),
-            ProductModel(name='Leather Crossbody', description='Handcrafted Italian leather crossbody bag.', price=129.00, category='Fashion', stock=15, image_url='/static/uploads/products/leather_crossbody.png'),
-            ProductModel(name='Ceramic Vase Set', description='Set of 3 minimalist ceramic vases.', price=68.00, category='Home Decor', stock=30, image_url='/static/uploads/products/ceramic_vase_set.png'),
-            ProductModel(name='Wireless Earbuds', description='True wireless earbuds.', price=159.99, category='Electronics', stock=50, image_url='/static/uploads/products/wireless_earbuds.png'),
-        ]
-        for p in sample_products: db.session.add(p)
-        db.session.commit()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

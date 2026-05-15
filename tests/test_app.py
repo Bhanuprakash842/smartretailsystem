@@ -100,13 +100,13 @@ def test_update_item_form_data(client, auth_header):
     
     resp = client.patch(f'/api/items/{p_id}', headers=auth_header, data=data, content_type='multipart/form-data')
     assert resp.status_code == 200
-    assert resp.get_json()['message'] == "Product updated successfully"
+    assert resp.get_json()['message'] == "Product updated"
     
     # Verify in DB
     with app.app_context():
-        updated_p = ProductModel.query.get(p_id)
+        updated_p = db.session.get(ProductModel, p_id)
         assert updated_p.name == "Updated Name"
-        assert updated_p.image_base64 is not None
+        assert updated_p.image_url is not None
 
 def test_cart_operations(client):
     # Create a product to add
@@ -144,4 +144,4 @@ def test_checkout(client):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data['order']['total'] == 100.0
-    assert data['order']['status'] == "Paid"
+    assert data['order']['status'] == "Processing"

@@ -1,4 +1,4 @@
-name: Flask Ecommerce CI/CD
+name: Smart Retail System CI/CD
 
 on:
   push:
